@@ -1,0 +1,269 @@
+<!doctype html>
+<html>
+<head>
+    {% include 'head.html' %}
+
+    <style>
+        .chatArea {
+            height: 100%;
+        }
+
+        .messages {
+            font-size: 150%;
+        }
+
+        .log {
+            color: gray;
+            font-size: 70%;
+            margin: 5px;
+            text-align: center;
+        }
+
+        .messages {
+            height: 100%;
+            margin: 0;
+        }
+
+        ul {
+            list-style: none;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body onload="joinroom()">
+    
+    <div>
+        <div class="d-flex flex-row">
+
+            <div class="modal fade " id="wordchoosermodal" data-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel"  data-bs-backdrop="static" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content bg-light border-0 shadow rounded-4">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Choose a word</h5>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row align-items-start">
+                                <div class="col text-center" v-for="word in words">
+                                    <button class="btn btn-primary rounded-4 shadow-sm" v-on:click="selectword(word)"  type="button">/&word&/</button>
+                                </div>
+                              </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-fill box" id="canvasgroup">
+                <div id="seecanvascontainer">
+                    <canvas id="seecanvas"></canvas> 
+                </div>
+                <div id="drawcanvascontainer">
+                    <canvas id="drawcanvas"></canvas>
+                </div>
+            </div>
+
+            <div id="app" class="d-flex flex-column flex-shrink-0 p-3 bg-light border-0 shadow rounded-4" style="width: 350px; height:100vh;">
+                
+
+                <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
+                    <span class="fs-4"><b>CanvasGuesser</b> <br> Game /&givendata.gamenumber&/</span>
+                </a>
+                <hr>
+                
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary rounded-4 shadow-sm" :disabled="!admin" onclick="startgame()" id="startbutton" type="button">Start</button>
+                    <button class="btn btn-primary rounded-4 shadow-sm" type="button">Button</button>
+                </div>
+
+                <hr>
+
+                <div class="chatArea py-3">
+                    <div class="messages bg-white border-0 rounded-4 shadow-sm">
+                        <ul class="p-3" style="font-size:15px">
+
+                            <li v-for="message in messages"><b>/&message.username&/</b> /&message.text&/</li>
+                            
+                        </ul>
+                    </div>
+                </div>
+
+
+                <div class="d-flex bd-highlight">
+
+                    <div class="p-2 flex-grow-1 bd-highlight">
+                        <input class="form-control shadow-sm rounded-pill border-0" onkeydown = "if (event.keyCode == 13) document.getElementById('buttoninput').click()" v-model="textinput" id="textinput" placeholder="Type here..."/>
+                    </div>
+
+                    <div class="p-2 bd-highlight">
+                        <button type="submit" class="btn btn-primary form-control shadow-sm rounded-pill border-0" onclick="sendmessage()" id="buttoninput" style="font-size:2px"><span class="material-icons">send</span></button>
+                    </div>
+                    
+                </div>
+
+                <hr>
+
+                <div class="dropdown">
+                <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img src="https://thispersondoesnotexist.com/image" alt="" width="32" height="32" class="rounded-circle me-2">
+                    <strong>/&givendata.username&/</strong>
+                </a>
+                <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2">
+                    <li><a class="dropdown-item">placeholder</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" onclick="leaveroom()">Leave</a></li>
+                </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+    <script>
+
+        let box = document.querySelector('.box');
+
+        let width = box.clientWidth;
+        let height = box.clientHeight;
+
+        var drawcanvas = new fabric.Canvas('drawcanvas', {
+            isDrawingMode: true
+        }); 
+        
+        drawcanvas.on('mouse:up', function () {
+            socket.emit('imagetransport',{text:app.textinput,username:app.givendata.username, gamenumber:app.givendata.gamenumber, image:(JSON.stringify(drawcanvas))});
+        });
+
+        drawcanvas.setHeight(height);
+        drawcanvas.setWidth(width);
+        
+    </script>
+
+    <script>
+        var socket = io();
+
+        var app = new Vue({
+            delimiters: ['/&', '&/'],
+            el: '#app',
+            name: 'app',
+            data () {
+                return {             
+                    givendata : JSON.parse('{{ data|tojson|safe }}'),
+                    textinput: null,
+                    messages:[],
+                    admin:null,
+                    drawing:null,
+                    choosemodal:null
+                }
+            },
+            mounted() {
+                if (window.location.pathname=="/gamehost") {
+                    this.admin=true;
+                } else {
+                    this.admin=false;
+                }
+                this.drawing=false;
+                this.choosemodal=false;
+                
+            },
+
+            watch: {
+                // whenever question changes, this function will run
+                drawing: function (newdrawingvalue, olddrawingvalue) {
+                    var drawcanvascontainer = document.getElementById('drawcanvascontainer');
+                    var seecanvascontainer = document.getElementById('seecanvascontainer');
+
+                    if (newdrawingvalue) {
+                        drawcanvascontainer.style.display = 'block';
+                        seecanvascontainer.style.display = 'none'; 
+                    } else {
+                        drawcanvascontainer.style.display = 'none';
+                        seecanvascontainer.style.display = 'block'; 
+                    } 
+                }
+            }
+            
+        });
+
+        var wordchooser = new Vue({
+            delimiters: ['/&', '&/'],
+            el: '#wordchoosermodal',
+            name: 'wordchoosermodal',
+            data () {
+                return {             
+                    words : []
+                }
+            },
+            methods: {
+                selectword(word) {
+                    wordchoosermodal.hide()
+                    socket.emit("wordchosen",{word:word,username:app.givendata.username, gamenumber:app.givendata.gamenumber});
+                }
+            }
+        });
+        
+        $("#startbutton").on("click", function() {
+            $(this).prop("disabled", true);
+        });
+
+        var wordchoosermodal = new bootstrap.Modal(document.getElementById('wordchoosermodal'))
+
+        function sendmessage() {
+            if (app.textinput !== '') {
+                socket.emit("message",{text:app.textinput,username:app.givendata.username, gamenumber:app.givendata.gamenumber});
+            }
+            app.textinput = "";
+        } 
+
+        function startgame() {
+            socket.emit("startgame",{text:app.textinput,username:app.givendata.username, gamenumber:app.givendata.gamenumber});
+        } 
+        
+        function leaveroom(){
+            socket.emit('leave', {username:app.givendata.username, gamenumber:app.givendata.gamenumber});
+            window.open("/","_self")
+        }
+
+        function joinroom(){
+            socket.emit('join', {username:app.givendata.username, gamenumber:app.givendata.gamenumber});
+        }
+
+        socket.on("message", function( msg ) {
+            console.log(msg);
+            (app.messages).push(msg);
+        })
+
+        socket.on("wordtransport", function( msg ) {
+            if (msg.userdrawing === app.givendata.username) {
+                wordchooser.words = msg.words
+                wordchoosermodal.show()
+            }
+        })
+
+        socket.on("imagetransport", function( msg ) {
+            console.log(msg)
+            var seecanvas = new fabric.Canvas('seecanvas');    
+
+            seecanvas.selection = false;
+            seecanvas.forEachObject(function(o) {
+            o.selectable = false;
+            });
+
+            seecanvas.setHeight(height);
+            seecanvas.setWidth(width);
+
+            
+            seecanvas.loadFromJSON(JSON.parse(msg.image), function() {
+                    seecanvas.renderAll(); 
+                },function(o,object){
+                    console.log(o,object)
+            })
+
+            
+        })
+
+    </script>
+
+ 
+
+</body>
+</html>

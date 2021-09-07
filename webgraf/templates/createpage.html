@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+ 
+
+
+<div id="app"> 
+    <h1 class="display-3">Hey, /&givendata.username&/</h1>
+    <form action="/gamehost" method="POST">
+        <div class="d-flex">
+            <div class="p-2 flex-fill"><h3>Want to change your username?</h3></div>
+            
+            <div class="p-2"><input name="hostusername" v-model="givendata.username" class="form-control rounded-pill shadow-sm border-0" placeholder="a better name"></div>
+        </div>
+        <!--
+        <div class="d-flex">
+            <div class="p-2 flex-fill"><h3>How many rounds would you like to play</h3></div>
+            
+            <div class="p-2"><input type="number" name="totalrounds" class="form-control rounded-pill shadow-sm border-0" placeholder="3"></div>
+        </div>-->
+
+        <div class="d-flex pt-2">
+            <button class="w-100 btn btn-lg btn-primary rounded-pill shadow-sm border-0" type="submit">Create</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    var socket = io();
+
+    var app = new Vue({
+        delimiters: ['/&', '&/'],
+        el: '#app',
+        data () {
+            return {             
+                givendata : {{ data|tojson|safe }},
+                textinput: null,
+                messages:[]
+            }
+        },    
+        methods: {}
+    });
+</script>
+
+{% endblock %}

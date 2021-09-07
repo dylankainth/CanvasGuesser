@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'head.html' %}
+</head>
+<body>
+    <main class="container" style="height: 100vh;">
+        <div class="p-5">
+            <div class="bg-light m-5 p-5 rounded-5 shadow-lg" style="height: 100%;">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </main>
+</body>
+</html>

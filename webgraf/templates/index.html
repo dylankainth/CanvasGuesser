@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+    {% include 'head.html' %}
+    
+    <style>
+        
+
+    </style>
+
+</head>
+
+<body>
+    
+    <div id="app">
+
+        <div class="px-4 pt-5 my-5 text-center">
+            <span class="material-icons" style="font-size:100px">draw</span>
+
+            <h1 class="display-2 fw-bold">CanvasGuesser</h1>
+            <h1 class="display-6 fw-bold">A skribbl.io clone</h1>
+        </div>
+
+        <div class="container col-xl-10 col-xxl-8 px-4 pb-5">
+            <div class="row align-items-center g-lg-5 py-5 h-100">
+
+                <div class="col-md-10 mx-auto col-lg-5 h-100">
+                    <form action="/createpage" method="POST" class="p-4 p-md-5 border-0 rounded-5 shadow-lg bg-light">
+                        <h1 class="display-6 fw-bold">Start a game</h1>
+                            <div class="form-floating mb-3">
+                                <input v-model="username" required type="text" name="username" class="form-control rounded-pill border-0 shadow-sm" id="floatingNameInput" placeholder="Elon Musk">
+                                <label for="floatingNameInput">Username</label>
+                            </div>
+                        <button class="w-100 btn btn-lg btn-primary rounded-pill" type="submit">Create</button>
+                    </form>
+                </div>
+
+              <div class="col-md-10 mx-auto col-lg-5 h-100">
+                <form action="/game" method="POST" class="p-4 p-md-5 border-0 rounded-5 shadow-lg bg-light">
+                    <h1 class="display-6 fw-bold">Join a game</h1>
+                  <div class="form-floating mb-3">
+                    <input v-model="username" required type="text" name="username" class="form-control rounded-pill border-0 shadow-sm" id="floatingNameInput" placeholder="Elon Musk">
+                    <label for="floatingNameInput">Username</label>
+                  </div>
+                  <div class="form-floating mb-3">
+                    <input v-model="gamenumber" required type="number" name="gamenumber" class="form-control rounded-pill border-0 shadow-sm" id="floatingCodeInput" placeholder="09102005">
+                    <label for="floatingCodeInput">Game Number</label>
+                  </div>
+                  <button class="w-100 btn btn-lg btn-primary rounded-pill" type="submit">Join</button>
+                </form>
+              </div>
+
+            </div>
+          </div>
+
+    </div>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data () {
+                return {
+                    newMessage: null,
+                    connected: null,
+                    gamenumber:null,
+                    username:null,
+                    mountains:null
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
