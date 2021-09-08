@@ -137,6 +137,7 @@ def startgame(data):
         emit("message",{'text':user+' is picking a word', 'gamenumber':data['gamenumber'],'username':'Server'}, to=room) 
         emit("wordtransport",{'words':['Cat','Dog','Mouse'],'userdrawing':user}, to=room)
         
+#test 
 
 @socketio.on('message')
 def on_message(data):
