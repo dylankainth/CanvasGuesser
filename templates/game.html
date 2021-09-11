@@ -52,6 +52,34 @@
                 </div>
             </div>
 
+            <div class="modal fade " id="wordwasmodal" data-keyboard="false" tabindex="-1" aria-labelledby="exampleModalLabel"  data-bs-backdrop="static" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content bg-light border-0 shadow rounded-4">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">The word was <b>/&data.word&/</b></h5>
+                        </div>
+                        <div class="modal-body">
+                            /&data&/
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade " id="gameovermodal" data-keyboard="false" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content bg-light border-0 shadow rounded-4">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Game Over</h5>
+                        </div>
+                        <div class="modal-body">
+                            podium here<br>/&stats&/
+                            <a href="/"><button class="btn btn-primary rounded-4 shadow-sm" type="button">Back to main menu</button></a>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex-fill box" id="canvasgroup">
                 <div id="seecanvascontainer">
                     <canvas id="seecanvas"></canvas> 
@@ -65,7 +93,7 @@
                 
 
                 <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
-                    <span class="fs-4"><b>CanvasGuesser</b> <br> Game /&givendata.gamenumber&/</span>
+                    <span class="fs-4"><b>CanvasGuesser</b> <br> Game /&givendata.gamenumber&/</span><span>/&timer&/</span>
                 </a>
                 <hr>
                 
@@ -139,6 +167,13 @@
     </script>
 
     <script>
+        //  This function from [https://stackoverflow.com/questions/14226803/wait-5-seconds-before-executing-next-line]
+        function sleep(milliseconds) {
+            const start = Date.now();
+            while (Date.now() - start < milliseconds);
+        }
+
+
         var socket = io();
 
         var app = new Vue({
@@ -152,7 +187,9 @@
                     messages:[],
                     admin:null,
                     drawing:null,
-                    choosemodal:null
+                    choosemodal:null,
+                    timer:null,
+                    gameover: null
                 }
             },
             mounted() {
@@ -179,6 +216,12 @@
                         drawcanvascontainer.style.display = 'none';
                         seecanvascontainer.style.display = 'block'; 
                     } 
+                },
+                timer: function (newtimervalue, oldtimervalue) {
+                    if (newtimervalue==0) {
+                        this.timer = null
+                        this.drawing = false
+                    }
                 }
             }
             
@@ -200,12 +243,36 @@
                 }
             }
         });
+
+        var wordwas = new Vue({
+            delimiters: ['/&', '&/'],
+            el: '#wordwasmodal',
+            name: 'wordwasmodal',
+            data () {
+                return {             
+                    data : []
+                }
+            }
+        });
+
+        var gameover = new Vue({
+            delimiters: ['/&', '&/'],
+            el: '#gameovermodal',
+            name: 'gameovermodal',
+            data () {
+                return {             
+                    stats: null
+                }
+            }
+        });
         
         $("#startbutton").on("click", function() {
             $(this).prop("disabled", true);
         });
 
         var wordchoosermodal = new bootstrap.Modal(document.getElementById('wordchoosermodal'))
+        var gameovermodal = new bootstrap.Modal(document.getElementById('gameovermodal'))
+        var wordwasmodal = new bootstrap.Modal(document.getElementById('wordwasmodal'))
 
         function sendmessage() {
             if (app.textinput !== '') {
@@ -228,14 +295,36 @@
         }
 
         socket.on("message", function( msg ) {
-            console.log(msg);
             (app.messages).push(msg);
+        })
+
+        socket.on("gameover", function( msg ) {
+            app.gameover == true
+            gameover.stats = msg.stats
+            gameovermodal.show()
+        })
+
+        socket.on("timer", function( msg ) {
+            app.timer = msg.time;
+        })
+
+        socket.on("wordwas", function( msg ) {
+            console.log("word was "+msg.data)
+            wordwas.data = msg.data;
+            wordwasmodal.show()
+            setTimeout(function() {
+                wordwasmodal.hide()
+            }, 1000);
+            
         })
 
         socket.on("wordtransport", function( msg ) {
             if (msg.userdrawing === app.givendata.username) {
                 wordchooser.words = msg.words
-                wordchoosermodal.show()
+                app.drawing=true
+                setTimeout(function() {
+                    wordchoosermodal.show()
+                }, 1000);
             }
         })
 
