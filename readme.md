@@ -11,4 +11,4 @@ CanvasGuesser is a pictionary game, it's basically a clone of the vastly popular
 ## Inner Workings
 CanvasGuesser uses a Python Flask webserver, which can be found in app.py;
 It uses Socket.io for websocket transmission, which you can read more about [here](https://socket.io/)
-It uses Vue.js in the frontend html, allowing for real-time DOM updates, read more [here](https://vuejs.org/)
+It uses Vue.js in the frontend html, allowing for real-time DOM updates, read more [here](https://vuejs.org/) (js, woohoo)
