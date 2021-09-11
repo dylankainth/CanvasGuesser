@@ -1,6 +1,5 @@
 # CanvasGuesser
-### Computer Science Summer Project 2021
-![SilverArrowRacing](https://img.shields.io/badge/Silver%20Arrow%20Racing-Harrow%20School-blue)
+![SilverArrowRacing](https://img.shields.io/badge/Computer Science Summer Project 2021-blue)
 
 ![GitHub language count](https://img.shields.io/github/languages/count/DylanK46/CanvasGuesser) 			 ![GitHub repo file count](https://img.shields.io/github/directory-file-count/DylanK46/CanvasGuesser) ![GitHub repo size](https://img.shields.io/github/repo-size/DylanK46/CanvasGuesser)
 
