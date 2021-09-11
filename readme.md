@@ -1,5 +1,5 @@
 # CanvasGuesser
-![SilverArrowRacing](https://img.shields.io/badge/Computer Science Summer Project 2021-blue)
+![SilverArrowRacing](https://img.shields.io/badge/Computer%20Science%20Summer%20Project%202021-blue)
 
 ![GitHub language count](https://img.shields.io/github/languages/count/DylanK46/CanvasGuesser) 			 ![GitHub repo file count](https://img.shields.io/github/directory-file-count/DylanK46/CanvasGuesser) ![GitHub repo size](https://img.shields.io/github/repo-size/DylanK46/CanvasGuesser)
 
