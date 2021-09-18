@@ -100,7 +100,6 @@ python-engineio==4.2.1
 python-jsonrpc-server==0.3.2
 python-language-server==0.31.10
 python-socketio==5.4.0
-pyxel==1.0.1
 referenceqvm==0.3
 regex==2021.4.4
 replit==3.1.0
