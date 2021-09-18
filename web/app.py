@@ -4,6 +4,9 @@ from flask_socketio import SocketIO, join_room, leave_room, send, emit
 from werkzeug import datastructures
 from random import random
 from threading import Event
+import random
+
+wordlist = ['Bunny', 'Cow', 'Sky', 'Painting','Minecraft', 'Smartphone', 'IKEA', 'Dog', 'Cat', 'Ham Sandwich', 'Water Bottle', 'Plant', 'Earth', 'Mars', 'Saturn']
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -13,14 +16,34 @@ games = [
     {'users':{'bob':{'score':10,'drawing':False},'james':{'score':10,'drawing':False}},'gamenumber':23, 'gamehostusername':'bob', 'closed':False, 'word':''}
 ]
 
-def generateandchecknumber():
-    number = int(1000000*random())
-    for game in games:
-        if (game['gamenumber'])==number:
-            print("hey")
-            generateandchecknumber()
+def choosewords():
+    while True:
+        words = random.choices(wordlist, k=3)
+        print(words)
+        if len(set(words)) != len(words):
+            continue
         else:
-            return number
+            break
+    return words
+
+#This function needs to be rewritten once I have gathered enough energy
+def generateandchecknumber():
+  while True:
+    number = int(1000000*random.random())
+
+    taken = False
+
+    for game in games:
+      if game['gamenumber'] == number:
+        taken = True
+        break;
+      else:
+        continue;
+    
+    if (taken):
+      continue;
+    else:
+      return number
 
 def checkgameexists(gamenumber):
     for game in games:
@@ -74,7 +97,7 @@ def createpage():
 def gamehost():
         data=request.form.to_dict()
         gamecode = generateandchecknumber()
-        games.append({'users':{},'gamenumber':gamecode, 'gamehostusername':data['hostusername'], 'closed':False, 'drawduration':int(data['drawduration'])})
+        games.append({'users':{},'gamenumber':gamecode, 'gamehostusername':data['hostusername'], 'closed':False, 'drawduration':int(data['drawduration']),'word':''})
         return render_template('game.html', data={"gamenumber":str(gamecode),"username":data['hostusername']})
 
 @app.route('/static/<path:path>')
@@ -135,8 +158,9 @@ def startgame(data):
             continue;
 
     for user in game['users']:
-        emit("message",{'text':user+' is picking a word', 'gamenumber':data['gamenumber'],'username':'Server'}, to=room) 
-        emit("wordtransport",{'words':['Cat','Dog','Mouse'],'userdrawing':user}, to=room)
+        emit("message",{'text':user+' is picking a word', 'gamenumber':data['gamenumber'],'username':'Server'}, to=room)
+
+        emit("wordtransport",{'words':choosewords(),'userdrawing':user}, to=room)
 
         secondswaittime = game['drawduration']
 
@@ -169,13 +193,17 @@ def startgame(data):
 
 @socketio.on('message')
 def on_message(data):
-    emit("message", data, to=data['gamenumber'])
-
     for game in games:
         if int(data['gamenumber'])==(game['gamenumber']):  
             print(data)
             if (data['text']).lower() == game['word'].lower(): 
                 game['users'][(data['username'])]['score'] = game['users'][(data['username'])]['score'] + 1
+                for user in game['users']:
+                    if game['users'][user]['drawing']:
+                        game['users'][user]['score'] = game['users'][user]['score'] + 1
+                emit("message",{'text':data['username']+' got the word', 'gamenumber':data['gamenumber'],'username':'Server', 'gottheword':True}, to=data['gamenumber'])
+            else:
+                emit("message", data, to=data['gamenumber'])
             break;
         else:
             continue;

@@ -59,21 +59,54 @@
                             <h5 class="modal-title" id="exampleModalLabel">The word was <b>/&data.word&/</b></h5>
                         </div>
                         <div class="modal-body">
-                            /&data&/
+                            <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">User</th>
+                                    <th scope="col">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(value, name) in data.users">
+                                    <td>/&name&/</td>
+                                    <td>/&value.score&/</td>
+                                </tr>
+                            </tbody>
+                            </table>
+                              
+                            
+                            
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="modal fade " id="gameovermodal" data-keyboard="false" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+            <div class="modal fade" id="gameovermodal" data-keyboard="false" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content bg-light border-0 shadow rounded-4">
                         <div class="modal-header">
                             <h5 class="modal-title" id="exampleModalLabel">Game Over</h5>
                         </div>
                         <div class="modal-body">
-                            podium here<br>/&stats&/
-                            <a href="/"><button class="btn btn-primary rounded-4 shadow-sm" type="button">Back to main menu</button></a>
+                            <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">User</th>
+                                    <th scope="col">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(value, name) in stats">
+                                    <td>/&name&/</td>
+                                    <td>/&value.score&/</td>
+                                </tr>
+                            </tbody>
+                            </table>
+                              
+                            <div class="d-flex justify-content-center">
+                                <a href="/"><button class="btn btn-primary rounded-4 shadow-sm" type="button">Back to main menu</button></a>
+                            </div>
+                            
                             
                         </div>
                     </div>
@@ -91,14 +124,33 @@
 
             <div id="app" class="d-flex flex-column flex-shrink-0 p-3 bg-light border-0 shadow rounded-4" style="width: 350px; height:100vh;">
                 
+                <div class="row align-items-start">
+                    <div class="col">
 
-                <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-dark text-decoration-none">
-                    <span class="fs-4"><b>CanvasGuesser</b> <br> Game /&givendata.gamenumber&/</span><span>/&timer&/</span>
-                </a>
+                        <a href="/" class="d-flex align-items-center link-dark text-decoration-none">
+                            <h5 class="fs-4"><b>CanvasGuesser</b></h5> 
+                        </a>
+
+                        <a onclick="copygamepin()" class="d-flex align-items-center link-dark text-decoration-none "  data-bs-toggle="tooltip" data-bs-placement="top" title="Tooltip on top">
+                            <h5 class="fs-4">Game /&givendata.gamenumber&/</h5> 
+                        </a>
+
+                    </div>
+                    <div class="col" v-if="timer">
+                        <div class="card bg-white border-0 rounded-4 shadow-sm">
+                            <div class="card-body text-center">
+                                <span class="fs-6 text-center"><b>Timer</b> <br></span>
+                                <span class="text-center">/&timer&/ s</span>
+                            </div>
+                          </div>   
+                    </div>
+                </div>
+
+                
                 <hr>
                 
                 <div class="d-grid gap-2">
-                    <button class="btn btn-primary rounded-4 shadow-sm" :disabled="!admin" onclick="startgame()" id="startbutton" type="button">Start</button>
+                    <button class="btn btn-primary rounded-4 shadow-sm" v-if="admin" onclick="startgame()" id="startbutton" type="button">Start</button>
                     <button class="btn btn-primary rounded-4 shadow-sm" type="button">Button</button>
                 </div>
 
@@ -108,7 +160,7 @@
                     <div class="messages bg-white border-0 rounded-4 shadow-sm">
                         <ul class="p-3" style="font-size:15px">
 
-                            <li v-for="message in messages"><b>/&message.username&/</b> /&message.text&/</li>
+                            <li v-for="message in messages" v-bind:style=" message.gottheword ? 'color:blue' : ''"><b>/&message.username&/</b> /&message.text&/</li>
                             
                         </ul>
                     </div>
@@ -118,7 +170,7 @@
                 <div class="d-flex bd-highlight">
 
                     <div class="p-2 flex-grow-1 bd-highlight">
-                        <input class="form-control shadow-sm rounded-pill border-0" onkeydown = "if (event.keyCode == 13) document.getElementById('buttoninput').click()" v-model="textinput" id="textinput" placeholder="Type here..."/>
+                        <input :disabled="drawing || guessedcorrectly" class="form-control shadow-sm rounded-pill border-0" onkeydown = "if (event.keyCode == 13) document.getElementById('buttoninput').click()" v-model="textinput" id="textinput" placeholder="Type here..."/>
                     </div>
 
                     <div class="p-2 bd-highlight">
@@ -145,6 +197,24 @@
     </div>
 
 </body>
+
+    <script>
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+
+        function copygamepin(){
+            text = app.givendata.gamenumber
+            navigator.clipboard.writeText(text).then(function() {
+            console.log('Async: Copying to clipboard was successful!');
+            }, function(err) {
+            console.error('Async: Could not copy text: ', err);
+            }); 
+        }
+
+    </script>
+
 
     <script>
 
@@ -189,7 +259,8 @@
                     drawing:null,
                     choosemodal:null,
                     timer:null,
-                    gameover: null
+                    gameover: null,
+                    guessedcorrectly: false
                 }
             },
             mounted() {
@@ -265,10 +336,6 @@
                 }
             }
         });
-        
-        $("#startbutton").on("click", function() {
-            $(this).prop("disabled", true);
-        });
 
         var wordchoosermodal = new bootstrap.Modal(document.getElementById('wordchoosermodal'))
         var gameovermodal = new bootstrap.Modal(document.getElementById('gameovermodal'))
@@ -282,6 +349,7 @@
         } 
 
         function startgame() {
+            document.getElementById("startbutton").disabled = true;
             socket.emit("startgame",{text:app.textinput,username:app.givendata.username, gamenumber:app.givendata.gamenumber});
         } 
         
@@ -296,10 +364,13 @@
 
         socket.on("message", function( msg ) {
             (app.messages).push(msg);
+            if (msg.gottheword){
+                app.guessedcorrectly=true
+            }
         })
 
         socket.on("gameover", function( msg ) {
-            app.gameover == true
+            app.gameover = true
             gameover.stats = msg.stats
             gameovermodal.show()
         })
@@ -310,12 +381,12 @@
 
         socket.on("wordwas", function( msg ) {
             console.log("word was "+msg.data)
+            app.guessedcorrectly=false
             wordwas.data = msg.data;
             wordwasmodal.show()
             setTimeout(function() {
                 wordwasmodal.hide()
             }, 1000);
-            
         })
 
         socket.on("wordtransport", function( msg ) {
