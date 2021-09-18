@@ -3,12 +3,17 @@ pipeline {
     stages {
         stage('build') {
             steps {
-                sh 'sudo pip3 install -r requirements.txt --user'
+                withEnv(["HOME=${env.WORKSPACE}"]) {
+                    sh 'pip3 install -r requirements.txt --user'
+                }             
             }
         }
         stage('run') {
+            
             steps {
-                sh 'python /web/app.py'
+                withEnv(["HOME=${env.WORKSPACE}"]) {
+                    sh 'python /web/app.py'
+                }
             }
         }
     }
