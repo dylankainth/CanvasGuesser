@@ -158,37 +158,36 @@ def startgame(data):
         else:
             continue;
 
-    for i in range(0,3):
-        for user in game['users']:
-            emit("message",{'text':user+' is picking a word', 'gamenumber':data['gamenumber'],'username':'Server'}, to=room)
+    for user in game['users']:
+        emit("message",{'text':user+' is picking a word', 'gamenumber':data['gamenumber'],'username':'Server'}, to=room)
 
-            emit("wordtransport",{'words':choosewords(),'userdrawing':user}, to=room)
+        emit("wordtransport",{'words':choosewords(),'userdrawing':user}, to=room)
 
-            secondswaittime = game['drawduration']
+        secondswaittime = game['drawduration']
 
-            global timerover
-            timerover = False
+        global timerover
+        timerover = False
 
-            @socketio.on('wordchosen')
-            def chooseword(data):
-                
-                game['word'] = data['word']
-                game['users'][user]['drawing'] = True
-
-                emit("message",{'text':user+' is drawing', 'gamenumber':data['gamenumber'],'username':'Server'}, to=room)
-
-                for i in range(1,secondswaittime+1):
-                    emit("timer",{'time':secondswaittime-i,'gamenumber':data['gamenumber']}, to=room)
-                    socketio.sleep(1)
-
-                global timerover
-                timerover = True
-                game['users'][user]['drawing'] = False
+        @socketio.on('wordchosen')
+        def chooseword(data):
             
-            while timerover==False:
+            game['word'] = data['word']
+            game['users'][user]['drawing'] = True
+
+            emit("message",{'text':user+' is drawing', 'gamenumber':data['gamenumber'],'username':'Server'}, to=room)
+
+            for i in range(1,secondswaittime+1):
+                emit("timer",{'time':secondswaittime-i,'gamenumber':data['gamenumber']}, to=room)
                 socketio.sleep(1)
 
-            emit("wordwas",{'data':game}, to=room)
+            global timerover
+            timerover = True
+            game['users'][user]['drawing'] = False
+        
+        while timerover==False:
+            socketio.sleep(1)
+
+        emit("wordwas",{'data':game}, to=room)
     
     emit('gameover',{'stats':game['users']}, to=room)
     print(game)
