@@ -1,20 +1,11 @@
 pipeline {
-    agent { docker { image 'python:3.7.2' } }
     stages {
-        stage('build') {
-            steps {
-                withEnv(["HOME=${env.WORKSPACE}"]) {
-                    sh 'pip3 install -r requirements.txt --user'
-                }             
-            }
+        stage('Build Docker') {
+            // build the docker image from the source code using the BUILD_ID parameter in image name
+                sh "sudo docker build -t flask-app -f web/dockerfile ."
         }
-        stage('run') {
-            
-            steps {
-                withEnv(["HOME=${env.WORKSPACE}"]) {
-                    sh 'python web/app.py'
-                }
-            }
+        stage("run docker container"){
+                sh "sudo docker run -p 5001:5001 --name flask-app -d flask-app "
         }
     }
 }
