@@ -1,5 +1,14 @@
 <!doctype html>
 <html>
+
+<!-- One of the following themes -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/> <!-- 'classic' theme -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/monolith.min.css"/> <!-- 'monolith' theme -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/> <!-- 'nano' theme -->
+
+<!-- Modern or es5 bundle -->
+<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+
 <head>
     {% include 'head.html' %}
 
@@ -81,6 +90,20 @@
                 </div>
             </div>
 
+            <div class="modal fade " id="loadingmodal" data-keyboard="false" tabindex="-1"data-bs-backdrop="static" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content bg-light border-0 shadow rounded-4 w-75 h-75">
+                        <div class="modal-body">
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                  <span class="visually-hidden">Loading...</span>
+                                </div>
+                              </div>    
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="modal fade" id="gameovermodal" data-keyboard="false" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content bg-light border-0 shadow rounded-4">
@@ -122,7 +145,10 @@
                 </div>
             </div>
 
+            
+
             <div id="app" class="d-flex flex-column flex-shrink-0 p-3 bg-light border-0 shadow rounded-4" style="width: 350px; height:100vh;">
+                
                 
                 <div class="row align-items-start">
                     <div class="col">
@@ -147,11 +173,47 @@
                 </div>
 
                 
-                <hr>
+                <hr v-show="admin">
                 
+                <div class="d-grid gap-2" v-if="admin">
+                    <button class="btn btn-primary rounded-4 shadow-sm" onclick="startgame()" id="startbutton" type="button">Start</button>
+                </div>
+
+                <hr v-show="drawing">
+
+
                 <div class="d-grid gap-2">
-                    <button class="btn btn-primary rounded-4 shadow-sm" v-if="admin" onclick="startgame()" id="startbutton" type="button">Start</button>
-                    <button class="btn btn-primary rounded-4 shadow-sm" type="button">Button</button>
+                    <div class="bg-white border-0 rounded-4 shadow-sm" v-show="drawing">
+                        <div class="p-3">
+                            <h5>Word : <b>/& word &/</b></h5>
+
+                            <hr class="my-3">
+
+                            <button onclick="drawcanvas.clear()" id="clearbutton" type="button" class="btn btn-primary rounded-4 w-100 shadow-sm">Clear</button> 
+                            
+                            <hr class="my-3">
+
+                            <div class="row align-items-end">
+                                <div class="col">
+                                    <h6 class="float-start">Brush Width</h6> 
+                                </div>
+                                <div class="col">
+                                    <h6 class="float-end">/&drawingcanvasmetadata.brushwidth&/</h6>
+                                </div>
+                            </div>                              
+                            
+                            <input type="range" min="1" max="100" step="1" v-model="drawingcanvasmetadata.brushwidth" id="brushwidthrange" class="form-range">
+                        
+                            <hr class="my-3">
+
+                            <div class="h-40 d-flex justify-content-center">
+                                <div class="color-picker">
+                        
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
 
                 <hr>
@@ -159,9 +221,7 @@
                 <div class="chatArea py-3">
                     <div class="messages bg-white border-0 rounded-4 shadow-sm">
                         <ul class="p-3" style="font-size:15px">
-
-                            <li v-for="message in messages" v-bind:style=" message.gottheword ? 'color:blue' : ''"><b>/&message.username&/</b> /&message.text&/</li>
-                            
+                            <li v-for="message in messages" v-bind:style=" message.gottheword ? 'color:blue' : ''"><b>/&message.username&/</b> /&message.text&/</li>      
                         </ul>
                     </div>
                 </div>
@@ -199,6 +259,7 @@
 </body>
 
     <script>
+
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
@@ -211,6 +272,15 @@
             }, function(err) {
             console.error('Async: Could not copy text: ', err);
             }); 
+        }
+
+        //from https://jsfiddle.net/Mottie/xcqpF/1/light/
+        function rgb2hex(rgb){
+            rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+            return (rgb && rgb.length === 4) ? "#" +
+            ("0" + parseInt(rgb[1],10).toString(16)).slice(-2) +
+            ("0" + parseInt(rgb[2],10).toString(16)).slice(-2) +
+            ("0" + parseInt(rgb[3],10).toString(16)).slice(-2) : '';
         }
 
     </script>
@@ -228,6 +298,7 @@
         }); 
         
         drawcanvas.on('mouse:up', function () {
+            app.pickr.show()
             socket.emit('imagetransport',{text:app.textinput,username:app.givendata.username, gamenumber:app.givendata.gamenumber, image:(JSON.stringify(drawcanvas))});
         });
 
@@ -260,10 +331,59 @@
                     choosemodal:null,
                     timer:null,
                     gameover: null,
-                    guessedcorrectly: false
+                    guessedcorrectly: false,
+                    drawingcanvasmetadata:{
+                        brushwidth: '10'
+                    },
+                    word : '',
+                    pickr:''
                 }
             },
             mounted() {
+                this.pickr = Pickr.create({
+                    el: '.color-picker',
+                    theme: 'monolith', // or 'monolith', or 'nano'
+
+                    swatches: [
+                        'rgba(244, 67, 54, 1)',
+                        'rgba(233, 30, 99, 1)',
+                        'rgba(156, 39, 176, 1)',
+                        'rgba(103, 58, 183, 1)',
+                        'rgba(63, 81, 181, 1)',
+                        'rgba(33, 150, 243, 1)',
+                        'rgba(3, 169, 244, 1)',
+                        'rgba(0, 188, 212, 1)',
+                        'rgba(0, 150, 136, 1)',
+                        'rgba(76, 175, 80, 1)',
+                        'rgba(139, 195, 74, 1)',
+                        'rgba(205, 220, 57, 1)',
+                        'rgba(255, 235, 59, 1)',
+                        'rgba(255, 193, 7, 1)'
+                    ],
+
+                    components: {
+
+                        // Main components
+                        preview: true,
+                        opacity: true,
+                        hue: true,
+
+                        // Input / output Options
+                        interaction: {
+                            hex: true,
+                            rgba: true,
+                            hsla: true,
+                            hsva: true,
+                            cmyk: true,
+                            input: true,
+                            clear: true,
+                            save: true
+                        }
+                    }
+                });
+
+                this.pickr.setColorRepresentation('HEX')
+
                 if (window.location.pathname=="/gamehost") {
                     this.admin=true;
                 } else {
@@ -271,6 +391,8 @@
                 }
                 this.drawing=false;
                 this.choosemodal=false;
+                this.drawingcanvasmetadata.brushwidth = '10';
+                
                 
             },
 
@@ -293,7 +415,16 @@
                         this.timer = null
                         this.drawing = false
                     }
+                },
+                drawingcanvasmetadata: {
+                    deep: true,
+                    handler(){
+                        drawcanvas.freeDrawingBrush.width = parseInt(this.drawingcanvasmetadata.brushwidth)
+                    }
                 }
+                    
+                
+                
             }
             
         });
@@ -304,13 +435,15 @@
             name: 'wordchoosermodal',
             data () {
                 return {             
-                    words : []
+                    words : [],
                 }
             },
             methods: {
                 selectword(word) {
                     wordchoosermodal.hide()
+                    app.word = word;
                     socket.emit("wordchosen",{word:word,username:app.givendata.username, gamenumber:app.givendata.gamenumber});
+                    app.pickr.show()
                 }
             }
         });
@@ -338,8 +471,10 @@
         });
 
         var wordchoosermodal = new bootstrap.Modal(document.getElementById('wordchoosermodal'))
+        var loadingmodal = new bootstrap.Modal(document.getElementById('loadingmodal'))
         var gameovermodal = new bootstrap.Modal(document.getElementById('gameovermodal'))
         var wordwasmodal = new bootstrap.Modal(document.getElementById('wordwasmodal'))
+        loadingmodal.show()
 
         function sendmessage() {
             if (app.textinput !== '') {
@@ -361,6 +496,13 @@
         function joinroom(){
             socket.emit('join', {username:app.givendata.username, gamenumber:app.givendata.gamenumber});
         }
+
+        socket.on("connect", () => {
+            setTimeout(function() {
+                    loadingmodal.hide()
+                }, 1000);
+            console.log(socket.id); // x8WIv7-mJelg7on_ALbx
+        });
 
         socket.on("message", function( msg ) {
             (app.messages).push(msg);
@@ -421,9 +563,15 @@
             
         })
 
-    </script>
+        app.pickr.on('change', (color, source, instance) => {
+            //drawcanvas.freeDrawingBrush.color = color
+            app.pickr.applyColor(color);
 
- 
+            convertedcolor = app.pickr.getColor().toRGBA()
+            drawcanvas.freeDrawingBrush.color = (rgb2hex('rgba('+Math.round(convertedcolor[0])+','+Math.round(convertedcolor[1])+','+Math.round(convertedcolor[2])+','+Math.round(convertedcolor[3])+')'))
+        });
+
+    </script>
 
 </body>
 </html>

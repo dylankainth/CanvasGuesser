@@ -14,9 +14,9 @@
         </div>
         
         <div class="d-flex">
-            <div class="p-2 flex-fill"><h3>How long should each user get to draw?</h3></div>
+            <div class="p-2 flex-fill"><h3>How long should each user get to draw? (seconds)</h3></div>
             
-            <div class="p-2"><input required type="number" name="drawduration" class="form-control rounded-pill shadow-sm border-0" placeholder="3"></div>
+            <div class="p-2"><input required type="number" name="drawduration" class="form-control rounded-pill shadow-sm border-0" min="10" max="30" placeholder="3"></div>
         </div>
 
         <div class="d-flex pt-2">
@@ -33,7 +33,7 @@
         el: '#app',
         data () {
             return {             
-                givendata : {{ data|tojson|safe }},
+                givendata : JSON.parse('{{ data|tojson|safe }}'),
                 textinput: null,
                 messages:[]
             }
