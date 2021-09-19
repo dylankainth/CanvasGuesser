@@ -215,4 +215,4 @@ def handle_message(data):
 
 if __name__ == '__main__':
     print("running")
-    socketio.run(app,use_reloader=True, port=5000)
+    socketio.run(app,port=5001, host="0.0.0.0")
